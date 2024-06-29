@@ -20,7 +20,7 @@ public class PainButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         isBeingHeld = true;
         touchStartTime = Time.time;
         //startangle=2*(Mathf.Rad2Deg*legang.transform.localRotation.x);
-        startangle = legang.gg;
+        startangle = legang.angle;
 
     }
 
@@ -37,7 +37,7 @@ public class PainButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         }
         else
         {   
-            float lastang=((legang.gg));
+            float lastang=((legang.angle));
             Debug.Log("Hold");
             Debug.Log("Pain Level: " + painLevel);
             //pain.rangedata(startangle,lastang,painLevel);

@@ -1,204 +1,123 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using UnityEngine;
 using TMPro;
-using UnityEngine;
 
-public class movesoham : MonoBehaviour{
+public class movesoham : MonoBehaviour
+{
     public progressBar pb;
-    public bool canmove;
-    enum joint
+
+    enum JointType
     {
-        knee,
-        elbow,
-        wrist,
-        ankle
+        Knee,
+        Elbow,
+        Wrist,
+        Ankle
     }
 
-    enum angle
-    {
-        x,
-        y,
-        xy
-    }
-
-    public int max, min = 0;
-
-    [SerializeField]
-    angle ang = new angle();
-
-    [SerializeField]
-    joint js = new joint();
-
-    [SerializeField]
-    int kneedeviation;
-
-    [SerializeField]
-    int elbowdeviation;
-
-    [SerializeField]
-    int wristdeviationx;
-
-    [SerializeField]
-    int wristdeviationy;
-
-    float gyrox, gyroy, accx, accy, accz;
-    float gyrox2, gyroy2, accx2, accy2, accz2;
-    float errgx, errgy, errax, erray, erraz;
+    [SerializeField] JointType jointType;
+    [SerializeField] int kneeDeviation;
+    [SerializeField] int elbowDeviation;
+    [SerializeField] int wristDeviationX;
+    [SerializeField] int wristDeviationY;
 
     public string[] data;
+    public GameObject jointObject;
+    public TMP_Text angleText;
 
-    [SerializeField]
-    TMP_Text angText;
+    private Quaternion initialRotation;
+    private Quaternion currentRotation;
+    public int max;
+    public int min =0;
 
-    public int gg;
-
-    int sample_size = 500;
-    int scale = 10;
-    bool cal = false;
-    float alpha = 0.91f;
-
-    public GameObject leg;
-    public Quaternion invQT;
-    public Quaternion rawQT;
-    public Quaternion rawQT2;
-
+    public int angle;
     void Start()
     {
-        while (data.Length < 8) { }
+        if (data.Length < 4) return;
 
-        invQT = Quaternion.identity;
-
-        UpdateSensorData();
-
-        rawQT = new Quaternion(accx, gyroy, -gyrox, accy);
-        rawQT2 = new Quaternion(accx2, gyroy2, -gyrox2, accy2);
-
-        invQT = Quaternion.Inverse(rawQT);
-    }
-
-    void UpdateSensorData()
-    {
-        gyrox = float.Parse(data[0]);
-        gyroy = float.Parse(data[1]);
-        accx = float.Parse(data[2]);
-        accy = float.Parse(data[3]);
-
-        gyrox2 = float.Parse(data[4]);
-        gyroy2 = float.Parse(data[5]);
-        accx2 = float.Parse(data[6]);
-        accy2 = float.Parse(data[7]);
-    }
-
-    void calibration()
-    {
-        UpdateSensorData();
-
-        rawQT = new Quaternion(accx, gyroy, -gyrox, accy);
-        rawQT2 = new Quaternion(accx2, gyroy2, -gyrox2, accy2);
-
-        invQT = Quaternion.Inverse(rawQT);
-        cal = false;
-        resetminmax();
-    }
-
-    public void cancal()
-    {
-        cal = true;
+        UpdateRotations();
+        initialRotation = Quaternion.Inverse(currentRotation);
     }
 
     void FixedUpdate()
     {
-        if (data.Length >= 8)
+        if (data.Length < 4) return;
+
+        if (Input.GetKeyDown(KeyCode.C))
         {
-            if (Input.GetKeyDown(KeyCode.C))
-            {
-                invQT = Quaternion.Inverse(rawQT);
-            }
+            ResetInitialRotation();
+        }
 
-            if (cal)
-            {
-                calibration();
-            }
+        UpdateRotations();
+        ApplyRotation();
+        UpdateAngleDisplay();
+    }
 
-            UpdateSensorData();
+    void UpdateRotations()
+    {
+        float x = float.Parse(data[0]);
+        float y = float.Parse(data[1]);
+        float z = float.Parse(data[2]);
+        float w = float.Parse(data[3]);
 
-            rawQT = new Quaternion(accx, gyroy, -gyrox, accy);
-            rawQT2 = new Quaternion(accx2, gyroy2, -gyrox2, accy2);
+        currentRotation = GetRotationForJoint(x, y, z, w);
+    }
 
-            if (ShouldMove())
-            {
-                Quaternion ang = rawQT * invQT;
-                leg.transform.localRotation = ang;
-
-                gg = (((int)(-2 * (Mathf.Rad2Deg * Mathf.Acos(leg.transform.localRotation.x)))) * -1 - kneedeviation) * -1;
-
-                if (Mathf.Abs(gg) > Mathf.Abs(max))
-                {
-                    max = gg;
-                }
-
-                if (js == joint.knee || js == joint.elbow)
-                {
-                    angText.text = "" + -gg;
-                }
-                else
-                {
-                    angText.text = "ANGLEX: " + Mathf.Abs(gg) + "\nANGLEY: " + Mathf.Abs((int)(-2 * (Mathf.Rad2Deg * Mathf.Acos(leg.transform.localRotation.z))) * -1 - wristdeviationx);
-                }
-
-                pb.health = -gg;
-            }
+    Quaternion GetRotationForJoint(float x, float y, float z, float w)
+    {
+        switch (jointType)
+        {
+            case JointType.Knee:
+            case JointType.Elbow:
+                return new Quaternion(z, y, -x, w);
+            case JointType.Ankle:
+                return new Quaternion(-y, -x, z, w);
+            case JointType.Wrist:
+            default:
+                return new Quaternion(x, y, -z, w);
         }
     }
 
-        bool ShouldMove()
+    void ApplyRotation()
     {
-        float dotProduct = Quaternion.Dot(rawQT, rawQT2);
-        bool yay = dotProduct < 0.95f;
-         Debug.Log("Dot Product: " +yay);
-        return yay; // Adjust this threshold as needed to cancel out whole limb movement
+        Quaternion rotationDelta = currentRotation * initialRotation;
+        jointObject.transform.localRotation = rotationDelta;
     }
 
-    public void resetminmax()
+    void UpdateAngleDisplay()
     {
-        max = 0;
-        min = 0;
+        angle = CalculateAngle();
+        max = Mathf.Max(max, Mathf.Abs(angle));
+
+        if (jointType == JointType.Knee || jointType == JointType.Elbow)
+        {
+            angleText.text = (-angle).ToString();
+            pb.health = -angle;
+        }
+        else
+        {
+            int angleY = CalculateAngleY();
+            angleText.text = $"ANGLE X: {Mathf.Abs(angle)}\nANGLE Y: {angleY}";
+        }
     }
 
-    float AdjustAngle(float angle)
+    int CalculateAngle()
     {
-        if (angle > 180) angle -= 360;
-        return angle;
-    }
-}
-
-public class KalmanFilter
-{
-    private float Xk; // State estimate
-    private float Pk; // Estimate error covariance
-    private float Q = 0.01f; // Process noise covariance
-    private float R = 0.1f; // Measurement noise covariance
-
-    public void SetState(float initialState)
-    {
-        Xk = initialState;
-        Pk = 1.0f; // Initial covariance estimation
+        float rawAngle = -2 * (Mathf.Rad2Deg * Mathf.Acos(jointObject.transform.localRotation.x));
+        return ((int)rawAngle - kneeDeviation) * -1;
     }
 
-    public float PredictAndUpdate(float measurement)
+    int CalculateAngleY()
     {
-        // Prediction
-        float Xk_ = Xk;
-        float Pk_ = Pk + Q;
+        float rawAngle = -2 * (Mathf.Rad2Deg * Mathf.Acos(jointObject.transform.localRotation.z));
+        return Mathf.Abs(((int)rawAngle * -1) - wristDeviationX);
+    }
 
-        // Kalman gain
-        float K = Pk_ / (Pk_ + R);
+    void ResetInitialRotation()
+    {
+        initialRotation = Quaternion.Inverse(currentRotation);
+    }
 
-        // Update state
-        Xk = Xk_ + K * (measurement - Xk_);
-        Pk = (1 - K) * Pk_;
-
-        return Xk;
+    public void ResetMaxAngle()
+    {
+     max = 0;
     }
 }

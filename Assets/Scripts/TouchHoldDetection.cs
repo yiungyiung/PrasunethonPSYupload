@@ -18,7 +18,7 @@ public class TouchHoldDetection : MonoBehaviour, IPointerDownHandler, IPointerUp
         isBeingHeld = true;
         touchStartTime = Time.time;
         //startangle=2*(Mathf.Rad2Deg*legang.transform.localRotation.x);
-        startangle = legang.gg;
+        startangle = legang.angle;
 
     }
 
@@ -33,7 +33,7 @@ public class TouchHoldDetection : MonoBehaviour, IPointerDownHandler, IPointerUp
         }
         else
         {   
-            float lastang=((legang.gg));
+            float lastang=((legang.angle));
             Debug.Log("Hold");
             pain.rangedata(startangle,lastang,painLevel);
         }
@@ -58,7 +58,7 @@ public class TouchHoldDetection : MonoBehaviour, IPointerDownHandler, IPointerUp
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        // Perform any logic you need when dragging ends
+        // Perform any logic you need when draangleing ends
     }
 }
 

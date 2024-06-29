@@ -1763,6 +1763,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pb: {fileID: 4171837701488656118}
+  canmove: 0
   max: 0
   min: 0
   ang: 0
@@ -2768,7 +2769,7 @@ PrefabInstance:
     - target: {fileID: 7815672649048686154, guid: e932573dcc1616e44b9e919a80f06094,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
