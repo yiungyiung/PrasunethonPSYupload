@@ -217,6 +217,18 @@ LightingSettings:
   m_PVRTiledBaking: 0
   m_NumRaysToShootPerTexel: -1
   m_RespectSceneVisibilityWhenBakingGI: 0
+--- !u!114 &419168108 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1652842654119337832, guid: de26a7afc46e82243914969e6675c3c0,
+    type: 3}
+  m_PrefabInstance: {fileID: 8106743630333758635}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &458755818
 GameObject:
   m_ObjectHideFlags: 0
@@ -766,7 +778,6 @@ GameObject:
   m_Component:
   - component: {fileID: 963194228}
   - component: {fileID: 963194227}
-  - component: {fileID: 963194231}
   - component: {fileID: 963194229}
   - component: {fileID: 963194226}
   - component: {fileID: 963194230}
@@ -893,21 +904,9 @@ MonoBehaviour:
   register_username: {fileID: 5033695032873663692}
   age: {fileID: 1968786112065988304}
   gender: {fileID: 1919644282002749708}
-  fb: {fileID: 963194231}
+  fb: {fileID: 0}
   mv: {fileID: 836634953104619857}
   ray: {fileID: 963194229}
---- !u!114 &963194231
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 963194225}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b01239979e6eec94fba6c8009dc56fcb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &963194232
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1475,7 +1474,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2115665308}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c4eaf21c746eeb146aea43966d227144, type: 3}
   m_Name: 
@@ -1763,22 +1762,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pb: {fileID: 4171837701488656118}
-  canmove: 0
+  jointType: 0
+  kneeDeviation: 180
+  elbowDeviation: 0
+  wristDeviationX: 0
+  wristDeviationY: 0
+  data: []
+  jointObject: {fileID: 1822921292}
+  angleText: {fileID: 419168108}
   max: 0
   min: 0
-  ang: 0
-  js: 0
-  kneedeviation: 180
-  elbowdeviation: 0
-  wristdeviationx: 0
-  wristdeviationy: 0
-  data: []
-  angText: {fileID: 9051735919099917166}
-  gg: 0
-  leg: {fileID: 1822921292}
-  invQT: {x: 0, y: 0, z: 0, w: 0}
-  rawQT: {x: 0, y: 0, z: 0, w: 0}
-  rawQT2: {x: 0, y: 0, z: 0, w: 0}
+  angle: 0
 --- !u!224 &856000294717548252 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2445344414042675787, guid: de26a7afc46e82243914969e6675c3c0,
@@ -3643,18 +3637,6 @@ Transform:
   - {fileID: 6630182876590067736}
   m_Father: {fileID: 60661852753470442}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9051735919099917166 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1652842654119337832, guid: de26a7afc46e82243914969e6675c3c0,
-    type: 3}
-  m_PrefabInstance: {fileID: 8106743630333758635}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &9075500392769514814
 PrefabInstance:
   m_ObjectHideFlags: 0

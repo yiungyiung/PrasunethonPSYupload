@@ -1,211 +1,112 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Firebase;
 using Firebase.Database;
+using Firebase.Auth;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
 public class firebase : MonoBehaviour
 {
     private DatabaseReference reference;
+    public static firebase Instance { get; private set; }
 
-    private void Start()
+    private void Awake()
     {
-        FirebaseApp
-            .CheckAndFixDependenciesAsync()
-            .ContinueWith(task =>
-            {
-                FirebaseApp app = FirebaseApp.DefaultInstance;
-                reference = FirebaseDatabase.DefaultInstance.RootReference;
-            });
-    }
-
-    public string AddDataEntry(
-        string name,
-        List<Dictionary<string, object>> yourList,
-        string age,
-        string gender
-    )
-    {
-        DatabaseReference userReference;
-        var time = DateTime.Now;
-        string timestamp = time.ToString("M-d-yyyy h:mm:ss tt");
-
-        System.Random random = new System.Random();
-        int uniqueId = random.Next(100000, 999999);
-        string userId = uniqueId.ToString();
-        Debug.Log(userId);
-        userReference = reference.Child(userId);
-        DatabaseReference jointReference = userReference.Child("Joint");
-        DatabaseReference patientReference =
-            userReference.Child("Patient_Details");
-
-        patientReference.Child("Name").SetValueAsync(name);
-        patientReference.Child("Age").SetValueAsync(age);
-        patientReference.Child("Gender").SetValueAsync(gender);
-
-        string activeSceneName = SceneManager.GetActiveScene().name;
-        DatabaseReference exerciseReference =
-            jointReference.Child(activeSceneName).Child(timestamp);
-        DatabaseReference dataReference = exerciseReference.Child("data");
-
-        foreach (var entry in yourList)
+        if (Instance == null)
         {
-            DatabaseReference entryNode = dataReference.Push(); // Use Push to generate a unique key for each entry
-
-            // Loop through the key-value pairs in the entry dictionary
-            foreach (var keyValuePair in entry)
-            {
-                // Check if the value is a dictionary itself
-                if (keyValuePair.Value is string)
-                {
-                    entryNode
-                        .Child(keyValuePair.Key)
-                        .SetValueAsync(keyValuePair.Value.ToString());
-                }
-                else
-                {
-                    foreach (var InnerkeyValuePair in entry)
-                    {
-                        DatabaseReference painNode = entryNode.Child("pain");
-                        foreach (var
-                            dict
-                            in
-                            (Dictionary<string, object>)InnerkeyValuePair.Value
-                        )
-                        {
-                            painNode
-                                .Child(dict.Key)
-                                .SetValueAsync(dict.Value.ToString());
-                        }
-                    }
-                }
-            }
-        }
-        return userId;
-        /*
-        var time = DateTime.Now;
-        string timestamp = time.ToString("M-d-yyyy h:mm:ss tt");
-        string userId = name;
-        DatabaseReference userReference = reference.Child(userId);
-        DatabaseReference entryReference = userReference.Push(); // Use Push to generate a unique key
-
-        entryReference.Child("timestamp").SetValueAsync(timestamp);
-        entryReference.Child("age").SetValueAsync(age);
-        entryReference.Child("gender").SetValueAsync(gender);
-        entryReference.Child("scene").SetValueAsync(SceneManager.GetActiveScene().name);
-
-        // Add yourList as child nodes under the "data" node
-        DatabaseReference dataReference = entryReference.Child("data");
-
-        foreach (var entry in yourList)
-        {
-            DatabaseReference entryNode = dataReference.Push(); // Use Push to generate a unique key for each entry
-
-            foreach (var keyValuePair in entry)
-            {
-                entryNode.Child(keyValuePair.Key).SetValueAsync(keyValuePair.Value.ToString());
-            }
-        }
-        */
-    }
-
-    public void AddDataEntry_old_user(
-        string userId,
-        List<Dictionary<string, object>> yourList
-    )
-    {
-        DatabaseReference userReference;
-        var time = DateTime.Now;
-        string timestamp = time.ToString("M-d-yyyy h:mm:ss tt");
-        if (string.IsNullOrEmpty(userId))
-        {
-            System.Random random = new System.Random();
-            int uniqueId = random.Next(100000, 999999);
-            userId = uniqueId.ToString();
-            userReference = reference.Child(userId);
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
-            userReference = reference.Child(userId);
+            Destroy(gameObject);
         }
+    }
 
+    private void Start()
+    {
+        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task =>
+        {
+            FirebaseApp app = FirebaseApp.DefaultInstance;
+            reference = FirebaseDatabase.DefaultInstance.RootReference;
+        });
+    }
+
+    public async Task CreateNewUser(string name, string age, string gender)
+    {
+        FirebaseUser user = FirebaseAuthManager.Instance.GetCurrentUser();
+        if (user == null)
+        {
+            Debug.LogError("No user is signed in.");
+            return;
+        }
+        string userId = user.UserId;
+        DatabaseReference userReference = reference.Child("users").Child(userId);
+        DatabaseReference patientReference = userReference.Child("Patient_Details");
+        await patientReference.Child("Name").SetValueAsync(name);
+        await patientReference.Child("Age").SetValueAsync(age);
+        await patientReference.Child("Gender").SetValueAsync(gender);
+
+        // Add authentication-related information
+        await patientReference.Child("AuthUID").SetValueAsync(userId);
+        await patientReference.Child("Email").SetValueAsync(user.Email);
+        await patientReference.Child("CreationTime").SetValueAsync(user.Metadata.CreationTimestamp);
+    }
+    public async Task AddDataEntry(List<Dictionary<string, object>> yourList)
+    {
+        FirebaseUser user = FirebaseAuthManager.Instance.GetCurrentUser();
+        if (user == null)
+        {
+            Debug.LogError("No user is signed in.");
+            return;
+        }
+        string userId = user.UserId;
+        DatabaseReference userReference = reference.Child("users").Child(userId);
         DatabaseReference jointReference = userReference.Child("Joint");
-
+        var time = DateTime.Now;
+        string timestamp = time.ToString("M-d-yyyy h:mm:ss tt");
         string activeSceneName = SceneManager.GetActiveScene().name;
-        DatabaseReference exerciseReference =
-            jointReference.Child(activeSceneName).Child(timestamp);
+        DatabaseReference exerciseReference = jointReference.Child(activeSceneName).Child(timestamp);
         DatabaseReference dataReference = exerciseReference.Child("data");
-
         foreach (var entry in yourList)
         {
-            DatabaseReference entryNode = dataReference.Push(); // Use Push to generate a unique key for each entry
-
-            // Loop through the key-value pairs in the entry dictionary
+            DatabaseReference entryNode = dataReference.Push();
             foreach (var keyValuePair in entry)
             {
-                // Check if the value is a dictionary itself
                 if (keyValuePair.Value is string)
                 {
-                    entryNode
-                        .Child(keyValuePair.Key)
-                        .SetValueAsync(keyValuePair.Value.ToString());
+                    await entryNode.Child(keyValuePair.Key).SetValueAsync(keyValuePair.Value.ToString());
                 }
                 else
                 {
-                    foreach (var InnerkeyValuePair in entry)
+                    DatabaseReference painNode = entryNode.Child("pain");
+                    foreach (var dict in (Dictionary<string, object>)keyValuePair.Value)
                     {
-                        DatabaseReference painNode = entryNode.Child("pain");
-                        foreach (var
-                            dict
-                            in
-                            (Dictionary<string, object>)InnerkeyValuePair.Value
-                        )
-                        {
-                            painNode
-                                .Child(dict.Key)
-                                .SetValueAsync(dict.Value.ToString());
-                        }
+                        await painNode.Child(dict.Key).SetValueAsync(dict.Value.ToString());
                     }
                 }
             }
         }
-
-        /*
-       foreach (var entry in yourList)
-       {
-           foreach (var keyValuePair in entry)
-           {
-               exerciseReference.Child(keyValuePair.Key).SetValueAsync(keyValuePair.Value.ToString());
-           }
-       }
-
-       var time = DateTime.Now;
-       string timestamp = time.ToString("M-d-yyyy h:mm:ss tt");
-       string userId = name;
-       DatabaseReference userReference = reference.Child(userId);
-       DatabaseReference entryReference = userReference.Push(); // Use Push to generate a unique key
-
-       entryReference.Child("timestamp").SetValueAsync(timestamp);
-       entryReference.Child("age").SetValueAsync(age);
-       entryReference.Child("gender").SetValueAsync(gender);
-       entryReference.Child("scene").SetValueAsync(SceneManager.GetActiveScene().name);
-
-       // Add yourList as child nodes under the "data" node
-       DatabaseReference dataReference = entryReference.Child("data");
-
-       foreach (var entry in yourList)
-       {
-           DatabaseReference entryNode = dataReference.Push(); // Use Push to generate a unique key for each entry
-
-           foreach (var keyValuePair in entry)
-           {
-               entryNode.Child(keyValuePair.Key).SetValueAsync(keyValuePair.Value.ToString());
-           }
-       }
-       */
     }
+
+
+        public async Task<bool> UserProfileExists()
+    {
+        FirebaseUser user = FirebaseAuthManager.Instance.GetCurrentUser();
+        if (user == null)
+        {
+            Debug.LogError("No user is signed in.");
+            return false;
+        }
+
+        string userId = user.UserId;
+        DatabaseReference userReference = reference.Child("users").Child(userId);
+
+        DataSnapshot snapshot = await userReference.GetValueAsync();
+        return snapshot.Exists;
+    }
+
 
     public void ReadName(
         string name,

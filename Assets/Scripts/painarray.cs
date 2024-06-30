@@ -32,7 +32,7 @@ public class painarray : MonoBehaviour
     void Start()
     {
         data1.Clear();
-        fb = gameObject.GetComponent<firebase>();
+        fb = firebase.Instance;
     }
     public void singledata(float init, string painLevel)
     {
@@ -84,52 +84,6 @@ public class painarray : MonoBehaviour
         }
     }
 
-    public void senddata()
-    {
-        ray.pushlast();
-        foreach (var kvp in ray.myDict)
-        {
-            Debug.Log("Key" + kvp.Key);
-            if (kvp.Key == -1)
-            {
-                continue;
-            }
-            Dictionary<string, string> innerDict = kvp.Value;
-
-            Debug.Log("Location: " + (innerDict.ContainsKey("Location") ? innerDict["Location"] : "NA"));
-            Debug.Log("Intensity: " + (innerDict.ContainsKey("Intensity") ? innerDict["Intensity"] : "NA"));
-            Debug.Log("Description: " + (innerDict.ContainsKey("Description") ? innerDict["Description"] : "NA"));
-            Dictionary<string, object> innerentry = new Dictionary<string, object>
-            {
-                //innerDict.ContainsKey("Desc") ? innerDict["Desc"] : "NA" 
-                { "Location", innerDict.ContainsKey("Location") ? innerDict["Location"] : "NA" },
-                { "Intensity", innerDict.ContainsKey("Intensity") ? innerDict["Intensity"] : "NA" },
-                { "Description", innerDict.ContainsKey("Description") ? innerDict["Description"] : "NA" }
-        };
-            Dictionary<string, object> entry = new Dictionary<string, object>
-            {
-                { "pain", innerentry }
-            };
-            data1.Add(entry);
-            innerDict.Clear();
-        }
-        GameObject[] gameObjects;
-        gameObjects = GameObject.FindGameObjectsWithTag("Finish");
-        foreach (GameObject gameObject in gameObjects)
-        {
-            Destroy(gameObject);
-        }
-        Dictionary<string, object> minMaxEntry = new Dictionary<string, object>
-        {
-            { "maxmin", $"({mv.max}, {mv.min})" },
-        };
-        data1.Add(minMaxEntry);
-        string newuserid = fb.AddDataEntry(register_username.text, data1, age.text, gender.options[gender.value].text);
-        Textuserid.text = newuserid;
-        data.Clear();
-        data1.Clear();
-        Text.text = "";
-    }
     public void senddataoldUser()
     {
         ray.pushlast();
@@ -170,7 +124,7 @@ public class painarray : MonoBehaviour
             { "maxmin", $"({mv.max}, {mv.min})" },
         };
         data1.Add(minMaxEntry);
-        fb.AddDataEntry_old_user(register_userid.text, data1);
+        fb.AddDataEntry(data1);
         data.Clear();
         data1.Clear();
         Text.text = "";
